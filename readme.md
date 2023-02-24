@@ -2,10 +2,7 @@
 A Discord bot that uses Google's Perspective API to moderate chat.
 
 ## Getting Started
-There are three ways to use the Moderator Bot:
-
-### 1. Add the Bot to Your Server  
-This is the simplest option - simply invite the bot to your Discord server by clicking [here](https://discord.com/api/oauth2/authorize?client_id=1071451913024974939&permissions=1377342450896&scope=bot). You will need to have administrator permissions on your server to use the bot.
+There are two ways to use the Moderator 
 
 ### 2. Run with Docker
 To run the bot using Docker, use the following command:
