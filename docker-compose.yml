@@ -1,0 +1,10 @@
+services:
+  moderator-cote:
+    image: ghcr.io/miraisubject/moderator-cote:main
+    environment:
+      DISCORD_TOKEN:
+      PERSPECTIVE_API_KEY:
+    volumes:
+      - moderator_data:/Moderator/data
+volumes:
+  moderator_data:
