@@ -193,7 +193,7 @@ async def on_message( message: discord.Message):
     for i in message_toxicity:
         if float(data[message_toxicity.index(i)+1]-0.1) <= i < float(data[message_toxicity.index(i)+1]): reasons_to_suspicous.append(tox.toxicity_names[message_toxicity.index(i)])
     if reasons_to_delete != []:
-        embed = discord.Embed(title="Message deleted", description=f"Your message was deleted because it was too toxic. The following reasons were found: **{'**, **'.join(reasons_to_delete)}**", color=discord.Color.red())
+        embed = discord.Embed(title="Message deleted", description=f"The student council deleted your message because it is probably toxic. The following reasons were found: **{'**, **'.join(reasons_to_delete)}**", color=discord.Color.red())
         await message.reply(f"{message.author.mention}", embed=embed, delete_after=15)
         await message.delete()
         embed = discord.Embed(title="Message deleted", description=f"**{message.author.mention}**'s message ***[{content}]({message.jump_url})*** in <#{message.channel.id}> was deleted because it was too toxic. The following reasons were found:", color=discord.Color.red())
@@ -202,7 +202,7 @@ async def on_message( message: discord.Message):
             embed.add_field(name=i, value=f"Found toxicity value: **{toxicity_value*100}%**", inline=False)
         await channel.send(embed=embed)
     elif len(reasons_to_suspicous) > 0:
-        await message.reply(f"<@&{moderator_role_id}> This message might be toxic. The following reasons were found: **{'**, **'.join(reasons_to_suspicous)}**", delete_after=15, mention_author=False)
+        await message.reply(f"This might be toxic. The following reasons were found: **{'**, **'.join(reasons_to_suspicous)}**", delete_after=15, mention_author=False)
         embed = discord.Embed(title="Message suspicious", description=f"**{message.author.mention}**'s message [***{content}***]({message.jump_url}) might be toxic. The following reasons were found:", color=discord.Color.orange())
         for i in reasons_to_suspicous:
             toxicity_value = message_toxicity[tox.toxicity_names.index(i)]
@@ -218,7 +218,7 @@ async def on_application_command_error(ctx: discord.ApplicationContext, error: E
     if str(error) == "Application Command raised an exception: Forbidden: 403 Forbidden (error code: 50013): Missing Permissions":
         await ctx.respond("I don't have the permissions to do that", ephemeral=True)
     else:   
-        await ctx.respond("An unknown error occured; please try again later. If the error persists, you can contact us in our support server: https://discord.gg/pB6hXtUeDv . Please send the following LOGS to the support server: ```py\n"+str(error)+"```", ephemeral=True)
+        await ctx.respond("An unknown error occured; please try again later. The logs are as follows: ```py\n"+str(error)+"```", ephemeral=True)
         print(error)
 
 @bot.event
@@ -229,11 +229,11 @@ async def on_guild_join(guild: discord.Guild):
     #we get the user who added the bot to the server
     user = audit_log_entry[0].user
     #we send a message to the user who added the bot to the server
-    await user.send(f"Thank you for adding me to your server! You can use the `/setup` command to setup the , and the `/setthreshold` command to set the toxicity threshold. You'll need to run that command at least once to setup the bot. You can use the `/help` command to get a list of all commands and their usage. If you need help, you can join our support server: https://discord.gg/pB6hXtUeDv")
+    await user.send(f"Thank you for adding me to your server! You can use the `/setup` command to setup the , and the `/setthreshold` command to set the toxicity threshold. You'll need to run that command at least once to setup the bot. You can use the `/help` command to get a list of all commands and their usage.")
 @bot.event
 async def on_ready():
     print("Bot is ready!")
     await bot.change_presence(activity=discord.Activity(type=discord.ActivityType.watching, name="out for toxic people!"))
 #Bot description
-# A bot that moderates toxic messages in your server thanks to AI. You can use the `/setup` command to setup the bot, and the `/setthreshold` command to set the toxicity threshold. You'll need to run that command at least once to setup the bot. You can use the `/help` command to get a list of all commands and their usage. If you need help, you can join our support server: https://discord.gg/pB6hXtUeDv or check our github page: https://github.com/Paillat-Dev/Moderator
+# A bot that moderates toxic messages in your server thanks to AI. You can use the `/setup` command to setup the bot, and the `/setthreshold` command to set the toxicity threshold. You'll need to run that command at least once to setup the bot. You can use the `/help` command to get a list of all commands and their usage.
 bot.run(discord_token)
