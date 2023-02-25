@@ -156,62 +156,66 @@ async def get_settings(ctx: discord.ApplicationContext):
 
 @bot.event
 async def on_message( message: discord.Message):
-    if message.author == bot.user: return #if the message is sent by the bot, we don't want to moderate it, we don't want to moderate the bot,
-    try: c.execute("SELECT * FROM moderation WHERE guild_id = ?", (str(message.guild.id),))
-    except: return
-    data = c.fetchone()
-    try: c.execute("SELECT * FROM data WHERE guild_id = ?", (str(message.guild.id),))
-    except: return
-    data2 = c.fetchone()
-    if data is None: return
-    channel = message.guild.get_channel(int(data2[1]))
-    is_enabled = data2[2]
-    moderator_role_id = data2[3]
-    content = message.content
+  unbanned_words = ["kick", "kicks", "kicking"]
+  for word in unbanned_words:
+        if word in message.content:
+            return
+        if message.author == bot.user: return #if the message is sent by the bot, we don't want to moderate it, we don't want to moderate the bot,
+        try: c.execute("SELECT * FROM moderation WHERE guild_id = ?", (str(message.guild.id),))
+        except: return
+        data = c.fetchone()
+        try: c.execute("SELECT * FROM data WHERE guild_id = ?", (str(message.guild.id),))
+        except: return
+        data2 = c.fetchone()
+        if data is None: return
+        channel = message.guild.get_channel(int(data2[1]))
+        is_enabled = data2[2]
+        moderator_role_id = data2[3]
+        content = message.content
     #if the content starts with everything excpet something containing a space and then ! , we don't want to moderate it because it is a command
     #first we check if the content starts with everything and then !
     #with regex, we check if the content starts with anything and then !
     #we also do that with the manage_messages permission, so the moderators can't be moderated
-    if not content.startswith("MOD TEST"):
-        if message.author.guild_permissions.manage_messages: return #if the user is a moderator, we don't want to moderate him because he is allowed to say whatever he wants because he is just like a dictator
-        if message.author.guild_permissions.administrator: return #if the user is an administrator, we don't want to moderate him because he is allowed to say whatever he wants because he is a DICTATOR
-    else:
-        content = content.replace("MOD TEST ", "")
-        content = content.replace("MOD TEST", "")
-    if re.match(r".*!", content):
+        if not content.startswith("MOD TEST"):
+            if message.author.guild_permissions.manage_messages: return #if the user is a moderator, we don't want to moderate him because he is allowed to say whatever he wants because he is just like a dictator
+            if message.author.guild_permissions.administrator: return #if the user is an administrator, we don't want to moderate him because he is allowed to say whatever he wants because he is a DICTATOR
+        else:
+            content = content.replace("MOD TEST ", "")
+            content = content.replace("MOD TEST", "")
+        if re.match(r".*!", content):
     #if the match dosent contain a space, we don't want to moderate it because it is a command
-        if not " " in re.match(r".*!", content).group(0):
+            if not " " in re.match(r".*!", content).group(0):
+                return
+        if not is_enabled: return
+        message_toxicity = tox.get_toxicity(content)
+        reasons_to_delete = []
+        reasons_to_suspicous = []
+        for value in message_toxicity: 
+            if value >= float(data[message_toxicity.index(value)+1]):
+                print(value)
+                reasons_to_delete.append(tox.toxicity_names[message_toxicity.index(value)])
+        for i in message_toxicity:
+            if float(data[message_toxicity.index(i)+1]-0.1) <= i < float(data[message_toxicity.index(i)+1]): reasons_to_suspicous.append(tox.toxicity_names[message_toxicity.index(i)])
+        if reasons_to_delete != []:
+            embed = discord.Embed(title="Message deleted", description=f"Your message was deleted by the student council, as it was determined to be potentially toxic. Upon investigation, several factors were identified: **{'**, **'.join(reasons_to_delete)}**", color=discord.Color.red())
+            await message.reply(f"{message.author.mention}", embed=embed, delete_after=5)
+            await message.delete()
+            embed = discord.Embed(title="Message deleted", description=f"**{message.author.mention}**'s message ***[{content}]({message.jump_url})*** in <#{message.channel.id}> was deleted because it was too toxic. The following reasons were found:", color=discord.Color.red())
+            for i in reasons_to_delete:
+                toxicity_value = message_toxicity[tox.toxicity_names.index(i)]
+                embed.add_field(name=i, value=f"Found toxicity value: **{toxicity_value*100}%**", inline=False)
+            await channel.send(embed=embed)
+        elif len(reasons_to_suspicous) > 0:
+            await message.reply(f"Given the information at hand, it appears that this message may be suspicious. A detailed analysis has revealed several factors that support this conclusion: **{'**, **'.join(reasons_to_suspicous)}**", delete_after=5, mention_author=False)
+            embed = discord.Embed(title="Message suspicious", description=f"**{message.author.mention}**'s message [***{content}***]({message.jump_url}) might be toxic. The following reasons were found:", color=discord.Color.orange())
+            for i in reasons_to_suspicous:
+                toxicity_value = message_toxicity[tox.toxicity_names.index(i)]
+                embed.add_field(name=i, value=f"Found toxicity value: **{toxicity_value*100}%**", inline=False)
+            await channel.send(embed=embed)
+            #we add a reaction to the message so the moderators can easily find it orange circle emoji
+            await message.add_reaction("🟠")
+        else:
             return
-    if not is_enabled: return
-    message_toxicity = tox.get_toxicity(content)
-    reasons_to_delete = []
-    reasons_to_suspicous = []
-    for value in message_toxicity: 
-        if value >= float(data[message_toxicity.index(value)+1]):
-             print(value)
-             reasons_to_delete.append(tox.toxicity_names[message_toxicity.index(value)])
-    for i in message_toxicity:
-        if float(data[message_toxicity.index(i)+1]-0.1) <= i < float(data[message_toxicity.index(i)+1]): reasons_to_suspicous.append(tox.toxicity_names[message_toxicity.index(i)])
-    if reasons_to_delete != []:
-        embed = discord.Embed(title="Message deleted", description=f"Your message was deleted by the student council, as it was determined to be potentially toxic. Upon investigation, several factors were identified: **{'**, **'.join(reasons_to_delete)}**", color=discord.Color.red())
-        await message.reply(f"{message.author.mention}", embed=embed, delete_after=5)
-        await message.delete()
-        embed = discord.Embed(title="Message deleted", description=f"**{message.author.mention}**'s message ***[{content}]({message.jump_url})*** in <#{message.channel.id}> was deleted because it was too toxic. The following reasons were found:", color=discord.Color.red())
-        for i in reasons_to_delete:
-            toxicity_value = message_toxicity[tox.toxicity_names.index(i)]
-            embed.add_field(name=i, value=f"Found toxicity value: **{toxicity_value*100}%**", inline=False)
-        await channel.send(embed=embed)
-    elif len(reasons_to_suspicous) > 0:
-        await message.reply(f"Given the information at hand, it appears that this message may be suspicious. A detailed analysis has revealed several factors that support this conclusion: **{'**, **'.join(reasons_to_suspicous)}**", delete_after=5, mention_author=False)
-        embed = discord.Embed(title="Message suspicious", description=f"**{message.author.mention}**'s message [***{content}***]({message.jump_url}) might be toxic. The following reasons were found:", color=discord.Color.orange())
-        for i in reasons_to_suspicous:
-            toxicity_value = message_toxicity[tox.toxicity_names.index(i)]
-            embed.add_field(name=i, value=f"Found toxicity value: **{toxicity_value*100}%**", inline=False)
-        await channel.send(embed=embed)
-        #we add a reaction to the message so the moderators can easily find it orange circle emoji
-        await message.add_reaction("🟠")
-    else:
-        return
 
 @bot.event
 async def on_application_command_error(ctx: discord.ApplicationContext, error: Exception):
