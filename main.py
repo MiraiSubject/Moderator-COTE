@@ -193,8 +193,8 @@ async def on_message( message: discord.Message):
     for i in message_toxicity:
         if float(data[message_toxicity.index(i)+1]-0.1) <= i < float(data[message_toxicity.index(i)+1]): reasons_to_suspicous.append(tox.toxicity_names[message_toxicity.index(i)])
     if reasons_to_delete != []:
-        embed = discord.Embed(title="Message deleted", description=f"The student council deleted your message because it is probably toxic. The following reasons were found: **{'**, **'.join(reasons_to_delete)}**", color=discord.Color.red())
-        await message.reply(f"{message.author.mention}", embed=embed, delete_after=15)
+        embed = discord.Embed(title="Message deleted", description=f"Your message was deleted by the student council, as it was determined to be potentially toxic. Upon investigation, several factors were identified: **{'**, **'.join(reasons_to_delete)}**", color=discord.Color.red())
+        await message.reply(f"{message.author.mention}", embed=embed, delete_after=5)
         await message.delete()
         embed = discord.Embed(title="Message deleted", description=f"**{message.author.mention}**'s message ***[{content}]({message.jump_url})*** in <#{message.channel.id}> was deleted because it was too toxic. The following reasons were found:", color=discord.Color.red())
         for i in reasons_to_delete:
@@ -202,7 +202,7 @@ async def on_message( message: discord.Message):
             embed.add_field(name=i, value=f"Found toxicity value: **{toxicity_value*100}%**", inline=False)
         await channel.send(embed=embed)
     elif len(reasons_to_suspicous) > 0:
-        await message.reply(f"This might be toxic. The following reasons were found: **{'**, **'.join(reasons_to_suspicous)}**", delete_after=15, mention_author=False)
+        await message.reply(f"Given the information at hand, it appears that this message may be suspicious. A detailed analysis has revealed several factors that support this conclusion: **{'**, **'.join(reasons_to_suspicous)}**", delete_after=5, mention_author=False)
         embed = discord.Embed(title="Message suspicious", description=f"**{message.author.mention}**'s message [***{content}***]({message.jump_url}) might be toxic. The following reasons were found:", color=discord.Color.orange())
         for i in reasons_to_suspicous:
             toxicity_value = message_toxicity[tox.toxicity_names.index(i)]
